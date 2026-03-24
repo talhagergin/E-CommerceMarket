@@ -1,0 +1,127 @@
+@using ToptanciECommerce.Domain.Entities
+@using ToptanciECommerce.Domain.Enums
+@model Order
+@{
+    ViewData["Title"] = $"Sipariş #{Model.OrderNumber}";
+}
+
+<div class="row g-4">
+    <!-- Order Items -->
+    <div class="col-lg-8">
+        <div class="bg-white rounded-3 border p-4 mb-4">
+            <h6 class="fw-semibold mb-3">Sipariş Kalemleri</h6>
+            <table class="table align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Ürün</th>
+                        <th>SKU</th>
+                        <th class="text-center">Adet</th>
+                        <th class="text-end">Birim Fiyat</th>
+                        <th class="text-end">Toplam</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.OrderItems)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@item.ProductName</td>
+                            <td><code>@item.ProductSKU</code></td>
+                            <td class="text-center">@item.Quantity</td>
+                            <td class="text-end">@item.UnitPrice.ToString("N2") ₺</td>
+                            <td class="text-end fw-semibold">@item.LineTotal.ToString("N2") ₺</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot class="table-light fw-semibold">
+                    <tr>
+                        <td colspan="4" class="text-end">Ara Toplam:</td>
+                        <td class="text-end">@Model.SubTotal.ToString("N2") ₺</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="text-end">KDV:</td>
+                        <td class="text-end">@Model.TaxAmount.ToString("N2") ₺</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="text-end">Kargo:</td>
+                        <td class="text-end">@Model.ShippingAmount.ToString("N2") ₺</td>
+                    </tr>
+                    <tr class="fs-6">
+                        <td colspan="4" class="text-end">GENEL TOPLAM:</td>
+                        <td class="text-end text-primary">@Model.TotalAmount.ToString("N2") ₺</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Update Status -->
+        <div class="bg-white rounded-3 border p-4">
+            <h6 class="fw-semibold mb-3">Durum Güncelle</h6>
+            <form asp-action="UpdateStatus" method="post" class="d-flex gap-2">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <select name="status" class="form-select" style="max-width:220px;">
+                    @foreach (OrderStatus s in Enum.GetValues<OrderStatus>())
+                    {
+                        if (s == Model.Status)
+                        {
+                            <option value="@((int)s)" selected>@s.ToTurkish()</option>
+                        }
+                        else
+                        {
+                            <option value="@((int)s)">@s.ToTurkish()</option>
+                        }
+                    }
+                </select>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check2 me-1"></i> Güncelle
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Customer & Payment Info -->
+    <div class="col-lg-4">
+        <div class="bg-white rounded-3 border p-4 mb-4">
+            <h6 class="fw-semibold mb-3">Müşteri Bilgileri</h6>
+            <dl class="row row-cols-1 mb-0 small">
+                <dt class="text-muted">Ad Soyad</dt>
+                <dd class="fw-semibold">@Model.CustomerName</dd>
+                <dt class="text-muted">Firma</dt>
+                <dd>@Model.CustomerCompany</dd>
+                <dt class="text-muted">E-posta</dt>
+                <dd>@Model.CustomerEmail</dd>
+                <dt class="text-muted">Telefon</dt>
+                <dd>@Model.CustomerPhone</dd>
+            </dl>
+        </div>
+
+        <div class="bg-white rounded-3 border p-4 mb-4">
+            <h6 class="fw-semibold mb-3">Teslimat Adresi</h6>
+            <address class="small mb-0">
+                @Model.ShippingAddress<br />
+                @Model.ShippingDistrict / @Model.ShippingCity<br />
+                @Model.ShippingPostalCode — @Model.ShippingCountry
+            </address>
+        </div>
+
+        <div class="bg-white rounded-3 border p-4">
+            <h6 class="fw-semibold mb-3">Ödeme Bilgileri</h6>
+            <dl class="row row-cols-1 mb-0 small">
+                <dt class="text-muted">Ödeme ID</dt>
+                <dd><code>@(Model.IyzicoPaymentId ?? "—")</code></dd>
+                <dt class="text-muted">Sipariş Tarihi</dt>
+                <dd>@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</dd>
+                @if (Model.PaidAt.HasValue)
+                {
+                    <dt class="text-muted">Ödeme Tarihi</dt>
+                    <dd>@Model.PaidAt.Value.ToString("dd.MM.yyyy HH:mm")</dd>
+                }
+                @if (!string.IsNullOrEmpty(Model.Notes))
+                {
+                    <dt class="text-muted">Notlar</dt>
+                    <dd>@Model.Notes</dd>
+                }
+            </dl>
+        </div>
+    </div>
+</div>

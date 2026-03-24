@@ -1,0 +1,412 @@
+@using ToptanciECommerce.Application.DTOs.Order
+@using ToptanciECommerce.Infrastructure.Data
+@using ToptanciECommerce.Domain.Entities
+@model ManualOrderDto
+@{
+    ViewData["Title"] = "Manuel Sipariş Oluştur";
+    var customers = (IList<ApplicationUser>)ViewBag.Customers;
+    var products  = (IReadOnlyList<Product>)ViewBag.Products;
+}
+
+<div class="d-flex align-items-center gap-2 mb-4">
+    <a asp-action="Index" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+    <h5 class="fw-bold mb-0">Manuel Sipariş Oluştur</h5>
+</div>
+
+<form asp-action="Create" method="post" id="orderForm">
+    @Html.AntiForgeryToken()
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger py-2 small mb-3">
+            @foreach (var err in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <div><i class="bi bi-exclamation-circle me-1"></i>@err.ErrorMessage</div>
+            }
+        </div>
+    }
+
+    <!-- Hidden container for form fields (built by JS) -->
+    <div id="formFields"></div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+
+            <!-- Customer Selection -->
+            <div class="bg-white rounded-3 border p-4 mb-4">
+                <h6 class="fw-semibold mb-3"><i class="bi bi-person me-2 text-primary"></i>Müşteri Seçimi</h6>
+
+                <select name="CustomerId" class="form-select form-select-lg" id="customerSelect"
+                        onchange="loadCustomerInfo(this)" required>
+                    <option value="">-- Müşteri Seçin --</option>
+                    @foreach (var c in customers)
+                    {
+                        var isPreselected = Model.CustomerId == c.Id;
+                        if (isPreselected)
+                        {
+                            <option value="@c.Id" selected
+                                    data-company="@c.CompanyName" data-email="@c.Email"
+                                    data-phone="@(c.Phone ?? "")" data-city="@(c.City ?? "")">
+                                @c.FullName — @c.CompanyName
+                            </option>
+                        }
+                        else
+                        {
+                            <option value="@c.Id"
+                                    data-company="@c.CompanyName" data-email="@c.Email"
+                                    data-phone="@(c.Phone ?? "")" data-city="@(c.City ?? "")">
+                                @c.FullName — @c.CompanyName
+                            </option>
+                        }
+                    }
+                </select>
+
+                <div id="customerInfo" class="mt-3 p-3 bg-light rounded-2 small d-none">
+                    <div class="row g-1">
+                        <div class="col-6"><span class="text-muted">Firma:</span> <strong id="ci-company"></strong></div>
+                        <div class="col-6"><span class="text-muted">E-posta:</span> <span id="ci-email"></span></div>
+                        <div class="col-6"><span class="text-muted">Telefon:</span> <span id="ci-phone"></span></div>
+                        <div class="col-6"><span class="text-muted">Şehir:</span> <span id="ci-city"></span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Lines -->
+            <div class="bg-white rounded-3 border p-4 mb-4">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h6 class="fw-semibold mb-0"><i class="bi bi-box-seam me-2 text-primary"></i>Ürün Kalemleri</h6>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addLine()">
+                        <i class="bi bi-plus-lg me-1"></i> Satır Ekle
+                    </button>
+                </div>
+
+                <!-- Product Search -->
+                <div class="position-relative mb-3">
+                    <input type="text" id="productSearch" class="form-control"
+                           placeholder="Ürün adı veya SKU yazın, listeden seçin..." autocomplete="off" />
+                    <div id="searchDropdown"
+                         class="position-absolute w-100 bg-white border rounded-2 shadow-sm d-none"
+                         style="z-index:1000;max-height:250px;overflow-y:auto;top:100%;"></div>
+                </div>
+
+                <!-- Lines Table -->
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle" id="linesTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Ürün</th>
+                                <th style="width:80px">SKU</th>
+                                <th class="text-end" style="width:100px">Birim Fiyat</th>
+                                <th class="text-center" style="width:90px">Adet</th>
+                                <th class="text-end" style="width:100px">Toplam</th>
+                                <th style="width:40px"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="linesBody">
+                            <tr id="emptyRow">
+                                <td colspan="6" class="text-center text-muted py-3">
+                                    <i class="bi bi-search me-1"></i>Yukarıdan ürün arayın veya "Satır Ekle"ye basın
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="d-none" id="totalRow">
+                                <td colspan="4" class="text-end fw-semibold">Tahmini Toplam:</td>
+                                <td class="text-end fw-bold text-primary" id="grandTotal">0,00 ₺</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Notes & Payment -->
+            <div class="bg-white rounded-3 border p-4">
+                <h6 class="fw-semibold mb-3">Ek Bilgiler</h6>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Satış Türü</label>
+                        <select name="SaleType" class="form-select">
+                            <option value="Veresiye">Veresiye (Sonra Öde)</option>
+                            <option value="Peşin">Peşin</option>
+                            <option value="Kart">Kart</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Ödeme Yöntemi</label>
+                        <select name="PaymentMethod" class="form-select">
+                            <option value="Manuel">Manuel</option>
+                            <option value="Havale/EFT">Havale / EFT</option>
+                            <option value="Çek">Çek</option>
+                            <option value="Nakit">Nakit</option>
+                            <option value="Kredi Kartı">Kredi Kartı</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Sipariş Notu</label>
+                        <textarea name="Notes" class="form-control" rows="2"
+                                  placeholder="Özel notlar, talimatlar...">@Model.Notes</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="bg-white rounded-3 border p-4 sticky-top" style="top:70px;">
+                <h6 class="fw-semibold mb-3">Özet</h6>
+                <div id="summaryList" class="small text-muted mb-3">Henüz ürün yok.</div>
+                <hr />
+                <div class="d-flex justify-content-between fw-bold fs-6 mb-4">
+                    <span>Toplam</span>
+                    <span class="text-primary" id="sidebarTotal">0,00 ₺</span>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold" id="submitBtn">
+                    <i class="bi bi-check2-circle me-1"></i> Siparişi Oluştur
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary w-100 mt-2">İptal</a>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+<script>
+// ── Product data from server ──────────────────────────────────────────────────
+const PRODUCTS = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+    products.Select(p => new { id = p.Id, name = p.Name, sku = p.SKU, price = (double)p.WholesalePrice })
+));
+
+let lines = [];  // { id, productId, name, sku, price, qty }
+let lineCounter = 0;
+
+// ── Customer info panel ───────────────────────────────────────────────────────
+function loadCustomerInfo(select) {
+    const opt  = select.selectedOptions[0];
+    const info = document.getElementById('customerInfo');
+    if (!opt || !opt.value) { info.classList.add('d-none'); return; }
+    document.getElementById('ci-company').textContent = opt.dataset.company || '—';
+    document.getElementById('ci-email').textContent   = opt.dataset.email   || '—';
+    document.getElementById('ci-phone').textContent   = opt.dataset.phone   || '—';
+    document.getElementById('ci-city').textContent    = opt.dataset.city    || '—';
+    info.classList.remove('d-none');
+}
+
+// ── Add line (empty) ──────────────────────────────────────────────────────────
+function addLine(product = null) {
+    const id = ++lineCounter;
+    lines.push({
+        id,
+        productId : product?.id   ?? 0,
+        name      : product?.name ?? '',
+        sku       : product?.sku  ?? '',
+        price     : product?.price?? 0,
+        qty       : 1
+    });
+    renderLines();
+}
+
+// ── Render all lines ──────────────────────────────────────────────────────────
+function renderLines() {
+    const tbody     = document.getElementById('linesBody');
+    const emptyRow  = document.getElementById('emptyRow');
+    const totalRow  = document.getElementById('totalRow');
+    const formFields = document.getElementById('formFields');
+
+    // Clear tbody (keep emptyRow ref)
+    tbody.innerHTML = '';
+    formFields.innerHTML = '';
+
+    if (lines.length === 0) {
+        tbody.appendChild(emptyRow);
+        totalRow.classList.add('d-none');
+        updateSidebar();
+        return;
+    }
+
+    totalRow.classList.remove('d-none');
+
+    lines.forEach((line, idx) => {
+        // ── Hidden form inputs ──────────────────────────────────────────
+        formFields.insertAdjacentHTML('beforeend', `
+            <input type="hidden" name="Lines[${idx}].ProductId" id="hid-pid-${line.id}" value="${line.productId}">
+            <input type="hidden" name="Lines[${idx}].Quantity"  id="hid-qty-${line.id}" value="${line.qty}">
+        `);
+
+        // ── Visible row ─────────────────────────────────────────────────
+        const tr = document.createElement('tr');
+        tr.id = `line-row-${line.id}`;
+        tr.innerHTML = `
+            <td>
+                <select class="form-select form-select-sm"
+                        onchange="onProductChange(this, ${line.id})">
+                    <option value="0">— Ürün seçin —</option>
+                    ${PRODUCTS.map(p =>
+                        `<option value="${p.id}" data-price="${p.price}" data-sku="${p.sku}"
+                                 ${p.id === line.productId ? 'selected' : ''}>
+                            ${p.name}
+                        </option>`
+                    ).join('')}
+                </select>
+            </td>
+            <td class="small font-monospace text-muted" id="sku-${line.id}">${line.sku}</td>
+            <td class="text-end small" id="price-${line.id}">${fmtPrice(line.price)}</td>
+            <td>
+                <input type="number" class="form-control form-control-sm text-center"
+                       value="${line.qty}" min="1" style="width:70px;"
+                       oninput="onQtyChange(this, ${line.id})" />
+            </td>
+            <td class="text-end fw-semibold text-primary" id="linetotal-${line.id}">
+                ${fmtPrice(line.price * line.qty)}
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-outline-danger"
+                        onclick="removeLine(${line.id})">
+                    <i class="bi bi-trash" style="font-size:.7rem;"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    updateSidebar();
+}
+
+// ── Event handlers ─────────────────────────────────────────────────────────────
+function onProductChange(select, lineId) {
+    const opt   = select.selectedOptions[0];
+    const pid   = parseInt(select.value) || 0;
+    const price = parseFloat(opt.dataset.price) || 0;
+    const sku   = opt.dataset.sku || '';
+
+    const line = lines.find(l => l.id === lineId);
+    if (!line) return;
+    line.productId = pid;
+    line.price     = price;
+    line.sku       = sku;
+    line.name      = pid ? opt.text.trim() : '';
+
+    // Update hidden inputs ← THIS IS THE KEY FIX
+    document.getElementById(`hid-pid-${lineId}`).value = pid;
+    document.getElementById(`sku-${lineId}`).textContent    = sku;
+    document.getElementById(`price-${lineId}`).textContent  = fmtPrice(price);
+    document.getElementById(`linetotal-${lineId}`).textContent = fmtPrice(price * line.qty);
+
+    updateSidebar();
+}
+
+function onQtyChange(input, lineId) {
+    const qty  = Math.max(1, parseInt(input.value) || 1);
+    input.value = qty;
+    const line = lines.find(l => l.id === lineId);
+    if (!line) return;
+    line.qty = qty;
+    document.getElementById(`hid-qty-${lineId}`).value = qty;
+    document.getElementById(`linetotal-${lineId}`).textContent = fmtPrice(line.price * qty);
+    updateSidebar();
+}
+
+function removeLine(lineId) {
+    lines = lines.filter(l => l.id !== lineId);
+    renderLines();
+}
+
+// ── Sidebar totals ─────────────────────────────────────────────────────────────
+function updateSidebar() {
+    const total = lines.reduce((s, l) => s + l.price * l.qty, 0);
+    document.getElementById('grandTotal').textContent  = fmtPrice(total);
+    document.getElementById('sidebarTotal').textContent = fmtPrice(total);
+
+    const summaryEl = document.getElementById('summaryList');
+    summaryEl.innerHTML = lines.length === 0
+        ? 'Henüz ürün yok.'
+        : lines.map(l =>
+            `<div class="d-flex justify-content-between mb-1">
+                <span class="text-truncate me-2 small">${l.name || '—'}</span>
+                <span class="small">${l.qty} × ${fmtPrice(l.price)}</span>
+             </div>`).join('');
+}
+
+// ── Product search ─────────────────────────────────────────────────────────────
+const searchInput    = document.getElementById('productSearch');
+const searchDropdown = document.getElementById('searchDropdown');
+
+searchInput.addEventListener('input', () => {
+    const q = searchInput.value.trim().toLowerCase();
+    if (!q) { searchDropdown.classList.add('d-none'); return; }
+
+    const results = PRODUCTS.filter(p =>
+        p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)
+    ).slice(0, 10);
+
+    if (!results.length) { searchDropdown.classList.add('d-none'); return; }
+
+    // Use data-id attribute instead of inline JSON to avoid quoting issues
+    searchDropdown.innerHTML = results.map(p =>
+        `<div class="p-2 border-bottom d-flex justify-content-between align-items-center search-item"
+              data-product-id="${p.id}" style="cursor:pointer;user-select:none;"
+              onmousedown="event.preventDefault();pickProductById(${p.id})">
+            <span class="small"><strong>${p.name}</strong> <span class="text-muted font-monospace ms-1">${p.sku}</span></span>
+            <span class="badge bg-primary ms-2">${fmtPrice(p.price)}</span>
+         </div>`
+    ).join('');
+    searchDropdown.classList.remove('d-none');
+});
+
+// Use mousedown + preventDefault so the input doesn't lose focus before click registers
+function pickProductById(productId) {
+    const p = PRODUCTS.find(x => x.id === productId);
+    if (!p) return;
+    addLine(p);
+    searchInput.value = '';
+    searchDropdown.classList.add('d-none');
+    searchInput.focus();
+}
+
+document.addEventListener('click', e => {
+    if (!searchDropdown.contains(e.target) && e.target !== searchInput)
+        searchDropdown.classList.add('d-none');
+});
+
+// ── Form submit validation ─────────────────────────────────────────────────────
+document.getElementById('orderForm').addEventListener('submit', function(e) {
+    const customerId = document.getElementById('customerSelect').value;
+    if (!customerId) {
+        e.preventDefault();
+        alert('Lütfen müşteri seçiniz.');
+        return;
+    }
+    const validLines = lines.filter(l => l.productId > 0 && l.qty > 0);
+    if (!validLines.length) {
+        e.preventDefault();
+        alert('Lütfen en az bir ürün ekleyiniz.');
+        return;
+    }
+    // Remove lines with productId=0 from hidden fields before submit
+    document.querySelectorAll('[id^="hid-pid-"]').forEach(inp => {
+        if (parseInt(inp.value) === 0) {
+            inp.remove();
+            const lineId = inp.id.replace('hid-pid-','');
+            const qtyInp = document.getElementById(`hid-qty-${lineId}`);
+            if (qtyInp) qtyInp.remove();
+        }
+    });
+});
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function fmtPrice(v) {
+    return v.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) + ' ₺';
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+@if (!string.IsNullOrEmpty(ViewBag.PreselectedCustomerId as string))
+{
+    <text>
+    document.addEventListener('DOMContentLoaded', () => {
+        const sel = document.getElementById('customerSelect');
+        if (sel) loadCustomerInfo(sel);
+    });
+    </text>
+}
+</script>
+}

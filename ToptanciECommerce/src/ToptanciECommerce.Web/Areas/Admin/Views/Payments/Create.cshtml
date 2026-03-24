@@ -1,0 +1,119 @@
+@using ToptanciECommerce.Infrastructure.Data
+@{
+    ViewData["Title"] = "Ödeme Kaydet";
+    var customers = (IList<ApplicationUser>)ViewBag.Customers;
+    string? preselected = ViewBag.PreselectedCustomerId as string;
+}
+
+<div class="d-flex align-items-center gap-2 mb-4">
+    <a asp-action="Index" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+    <h5 class="fw-bold mb-0">Ödeme Kaydet</h5>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="bg-white rounded-3 border p-4 mb-3">
+                <h6 class="fw-semibold mb-3">Ödeme Bilgileri</h6>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Müşteri <span class="text-danger">*</span></label>
+                        <select name="customerId" class="form-select" id="customerSel"
+                                onchange="loadOrders(this.value)" required>
+                            <option value="">-- Müşteri Seçin --</option>
+                            @foreach (var c in customers)
+                            {
+                                if (c.Id == preselected)
+                                {
+                                    <option value="@c.Id" selected>@c.FullName — @c.CompanyName</option>
+                                }
+                                else
+                                {
+                                    <option value="@c.Id">@c.FullName — @c.CompanyName</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Tutar (₺) <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">₺</span>
+                            <input type="number" name="amount" class="form-control"
+                                   step="0.01" min="0.01" placeholder="0,00" required />
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Tarih</label>
+                        <input type="datetime-local" name="paymentDateStr" class="form-control"
+                               value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Ödeme Türü</label>
+                        <select name="paymentType" class="form-select">
+                            <option value="Tahsilat">Tahsilat (Gelen Ödeme)</option>
+                            <option value="İade">İade (Giden Ödeme)</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Ödeme Yöntemi</label>
+                        <select name="paymentMethod" class="form-select">
+                            <option value="Nakit">Nakit</option>
+                            <option value="Kart">Kredi/Banka Kartı</option>
+                            <option value="Havale/EFT">Havale / EFT</option>
+                            <option value="Çek">Çek</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">İlgili Sipariş (Opsiyonel)</label>
+                        <select name="orderId" class="form-select" id="orderSel">
+                            <option value="">-- Sipariş seçin --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Not</label>
+                        <input type="text" name="notes" class="form-control"
+                               placeholder="Ödemeyle ilgili notlar..." />
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-success px-4">
+                <i class="bi bi-check2 me-1"></i> Ödemeyi Kaydet
+            </button>
+            <a asp-action="Index" class="btn btn-outline-secondary ms-2">İptal</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+async function loadOrders(customerId) {
+    const sel = document.getElementById('orderSel');
+    sel.innerHTML = '<option value="">-- Sipariş seçin --</option>';
+    if (!customerId) return;
+    const res = await fetch(`/Admin/Payments/CustomerOrders/${customerId}`);
+    if (!res.ok) return;
+    const orders = await res.json();
+    orders.forEach(o => {
+        const opt = document.createElement('option');
+        opt.value = o.id;
+        opt.textContent = `#${o.orderNumber} — ${parseFloat(o.total).toLocaleString('tr-TR',{minimumFractionDigits:2})} ₺`;
+        sel.appendChild(opt);
+    });
+}
+
+// Pre-load orders if customer preselected
+@if (!string.IsNullOrEmpty(preselected))
+{
+    <text>document.addEventListener('DOMContentLoaded', () => loadOrders('@preselected'));</text>
+}
+</script>
+}

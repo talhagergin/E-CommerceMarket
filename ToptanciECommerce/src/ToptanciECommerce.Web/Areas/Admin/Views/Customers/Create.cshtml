@@ -1,0 +1,163 @@
+@using ToptanciECommerce.Application.DTOs.Customer
+@model CreateCustomerDto
+@{
+    ViewData["Title"] = "Yeni Müşteri Ekle";
+}
+
+<div class="d-flex align-items-center gap-2 mb-4">
+    <a asp-action="Index" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+    <h5 class="fw-bold mb-0">Yeni Müşteri Ekle</h5>
+</div>
+
+<div class="row">
+    <div class="col-lg-7">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger py-2 small mb-3">
+                    @foreach (var err in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <div><i class="bi bi-exclamation-circle me-1"></i>@err.ErrorMessage</div>
+                    }
+                </div>
+            }
+
+            <!-- Identity -->
+            <div class="bg-white rounded-3 border p-4 mb-3">
+                <h6 class="fw-semibold mb-3 text-primary"><i class="bi bi-person me-2"></i>Giriş Bilgileri</h6>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label asp-for="Email" class="form-label">E-posta <span class="text-danger">*</span></label>
+                        <input asp-for="Email" type="email" class="form-control"
+                               placeholder="musteri@firma.com" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                        <div class="form-text">Müşteri bu e-posta ile giriş yapacak.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Password" class="form-label">Şifre <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input asp-for="Password" type="password" id="pwdInput" class="form-control"
+                                   placeholder="Min. 8 karakter" />
+                            <button type="button" class="btn btn-light border"
+                                    onclick="togglePwd('pwdInput','eyePwd')">
+                                <i class="bi bi-eye" id="eyePwd"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="ConfirmPassword" class="form-label">Şifre Tekrar <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input asp-for="ConfirmPassword" type="password" id="pwd2Input" class="form-control"
+                                   placeholder="Tekrar girin" />
+                            <button type="button" class="btn btn-light border"
+                                    onclick="togglePwd('pwd2Input','eyePwd2')">
+                                <i class="bi bi-eye" id="eyePwd2"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <!-- Quick password generator -->
+                <div class="mt-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                            onclick="generatePassword()">
+                        <i class="bi bi-key me-1"></i> Otomatik Şifre Oluştur
+                    </button>
+                    <span id="generatedPwd" class="ms-2 font-monospace small text-muted"></span>
+                </div>
+            </div>
+
+            <!-- Personal -->
+            <div class="bg-white rounded-3 border p-4 mb-3">
+                <h6 class="fw-semibold mb-3 text-primary"><i class="bi bi-building me-2"></i>Kişisel Bilgiler</h6>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="FirstName" class="form-label">Ad <span class="text-danger">*</span></label>
+                        <input asp-for="FirstName" class="form-control" />
+                        <span asp-validation-for="FirstName" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="LastName" class="form-label">Soyad <span class="text-danger">*</span></label>
+                        <input asp-for="LastName" class="form-control" />
+                        <span asp-validation-for="LastName" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-8">
+                        <label asp-for="CompanyName" class="form-label">Firma Adı <span class="text-danger">*</span></label>
+                        <input asp-for="CompanyName" class="form-control" />
+                        <span asp-validation-for="CompanyName" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Phone" class="form-label">Telefon</label>
+                        <input asp-for="Phone" class="form-control" placeholder="0555 000 00 00" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="TaxNumber" class="form-label">Vergi No</label>
+                        <input asp-for="TaxNumber" class="form-control" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Address -->
+            <div class="bg-white rounded-3 border p-4 mb-4">
+                <h6 class="fw-semibold mb-3 text-primary"><i class="bi bi-geo-alt me-2"></i>Adres Bilgileri</h6>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label asp-for="Address" class="form-label">Adres</label>
+                        <textarea asp-for="Address" class="form-control" rows="2"
+                                  placeholder="Mahalle, sokak, bina no..."></textarea>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="District" class="form-label">İlçe</label>
+                        <input asp-for="District" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="City" class="form-label">Şehir</label>
+                        <input asp-for="City" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="PostalCode" class="form-label">Posta Kodu</label>
+                        <input asp-for="PostalCode" class="form-control" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info py-2 small mb-3">
+                <i class="bi bi-info-circle me-1"></i>
+                Müşteri oluşturulduğunda <strong>otomatik onaylı</strong> olarak kayıt edilir ve hemen giriş yapabilir.
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="bi bi-person-plus me-1"></i> Müşteriyi Kaydet
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary">İptal</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function togglePwd(inputId, iconId) {
+    const inp  = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    if (inp.type === 'password') { inp.type = 'text';     icon.className = 'bi bi-eye-slash'; }
+    else                         { inp.type = 'password'; icon.className = 'bi bi-eye';       }
+}
+
+function generatePassword() {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    let pwd = '';
+    for (let i = 0; i < 10; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
+    document.getElementById('pwdInput').value  = pwd;
+    document.getElementById('pwd2Input').value = pwd;
+    document.getElementById('generatedPwd').textContent = '→ ' + pwd;
+    document.getElementById('pwdInput').type  = 'text';
+    document.getElementById('pwd2Input').type = 'text';
+}
+</script>
+}

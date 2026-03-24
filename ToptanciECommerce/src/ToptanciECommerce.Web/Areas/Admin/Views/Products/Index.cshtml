@@ -1,0 +1,138 @@
+@model List<ProductDto>
+@{
+    ViewData["Title"] = "Ürünler";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div></div>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i> Yeni Ürün
+    </a>
+</div>
+
+<!-- Filters -->
+<div class="bg-white rounded-3 border p-3 mb-4">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-5">
+            <label class="form-label text-muted small">Arama</label>
+            <input type="text" name="search" value="@ViewBag.Search"
+                   class="form-control" placeholder="Ürün adı veya SKU..." />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label text-muted small">Kategori</label>
+            <select name="categoryId" asp-items="ViewBag.Categories" class="form-select">
+                <option value="">-- Tüm Kategoriler --</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-search me-1"></i> Filtrele
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Products Table -->
+<div class="bg-white rounded-3 border">
+    <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+        <span class="text-muted small">@ViewBag.TotalCount ürün bulundu</span>
+        <a asp-action="StockPriceUpdate" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-pencil-square me-1"></i> Toplu Fiyat/Stok
+        </a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th width="60">Görsel</th>
+                    <th>Ürün Adı / SKU</th>
+                    <th>Kategori</th>
+                    <th>Fiyat (TL)</th>
+                    <th>Toptan (TL)</th>
+                    <th>Stok</th>
+                    <th>Durum</th>
+                    <th width="120">İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model)
+                {
+                    <tr>
+                        <td>
+                            @if (!string.IsNullOrEmpty(p.MainImageUrl))
+                            {
+                                <img src="@p.MainImageUrl" alt="@p.Name"
+                                     class="rounded" style="width:50px;height:50px;object-fit:cover;" />
+                            }
+                            else
+                            {
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                     style="width:50px;height:50px;">
+                                    <i class="bi bi-image text-muted"></i>
+                                </div>
+                            }
+                        </td>
+                        <td>
+                            <div class="fw-semibold">@p.Name</div>
+                            <small class="text-muted font-monospace">@p.SKU</small>
+                        </td>
+                        <td><span class="badge bg-light text-dark border">@p.CategoryName</span></td>
+                        <td>@p.Price.ToString("N2")</td>
+                        <td class="fw-semibold text-primary">@p.WholesalePrice.ToString("N2")</td>
+                        <td>
+                            <span class="@(p.StockQuantity <= 5 ? "text-danger fw-semibold" : "")">
+                                @p.StockQuantity
+                            </span>
+                        </td>
+                        <td>
+                            @if (p.IsActive)
+                            {
+                                <span class="badge bg-success">Aktif</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Pasif</span>
+                            }
+                            @if (p.IsFeatured)
+                            {
+                                <span class="badge bg-warning text-dark ms-1">Öne Çıkan</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@p.Id"
+                               class="btn btn-sm btn-outline-primary me-1">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form asp-action="Delete" asp-route-id="@p.Id" method="post" class="d-inline"
+                                  onsubmit="return confirm('@p.Name silinecek. Emin misiniz?')">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if ((int)ViewBag.TotalPages > 1)
+    {
+        <div class="p-3 border-top d-flex justify-content-center">
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    @for (int i = 1; i <= (int)ViewBag.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == (int)ViewBag.Page ? "active" : "")">
+                            <a class="page-link" asp-action="Index"
+                               asp-route-page="@i"
+                               asp-route-search="@ViewBag.Search"
+                               asp-route-categoryId="@ViewBag.SelectedCategoryId">@i</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        </div>
+    }
+</div>
