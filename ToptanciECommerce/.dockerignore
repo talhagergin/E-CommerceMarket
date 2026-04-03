@@ -1,0 +1,5 @@
+toptanci.db
+toptanci.db-shm
+toptanci.db-wal
+src/**/bin/
+src/**/obj/

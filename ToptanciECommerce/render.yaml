@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: toptanci-ecommerce
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__DefaultConnection
+        sync: false  # Set this in Render dashboard (paste your Neon/PostgreSQL URL)
+      - key: PORT
+        value: 8080
+    healthCheckPath: /
+    autoDeploy: true

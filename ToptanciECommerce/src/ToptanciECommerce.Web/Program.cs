@@ -3,7 +3,17 @@ using Microsoft.EntityFrameworkCore;
 using ToptanciECommerce.Infrastructure;
 using ToptanciECommerce.Infrastructure.Data;
 
+// Required for Npgsql: treat DateTime as unspecified (no UTC enforcement)
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Support PORT environment variable (used by Render.com)
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(port))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
 
 // ── Infrastructure (EF Core, Repositories, ImageService) ──────────────────
 builder.Services.AddInfrastructure(builder.Configuration);
