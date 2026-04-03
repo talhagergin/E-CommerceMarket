@@ -81,8 +81,8 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 // ── Seed admin user + demo data on first run ─────────────────────────────────
-await SeedAsync(app);
-await SeedDataAsync(app);
+await SeedDataAsync(app); // Run migrations first
+await SeedAsync(app);     // Then seed roles/users
 
 app.Run();
 
