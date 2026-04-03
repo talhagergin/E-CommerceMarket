@@ -22,7 +22,13 @@ public static class DependencyInjection
                 b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
-        services.AddScoped<IImageService, ImageService>();
+
+        // Use R2 cloud storage if configured, otherwise fall back to local filesystem
+        var r2Endpoint = configuration["CloudflareR2:Endpoint"];
+        if (!string.IsNullOrWhiteSpace(r2Endpoint))
+            services.AddScoped<IImageService, R2ImageService>();
+        else
+            services.AddScoped<IImageService, ImageService>();
         services.AddScoped<IOrderPdfService, OrderPdfService>();
         services.AddScoped<IOrderService, OrderService>();
         services.AddHttpContextAccessor();
