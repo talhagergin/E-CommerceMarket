@@ -1,3 +1,4 @@
+using System.Net;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.AspNetCore.Http;
@@ -22,7 +23,7 @@ public class R2ImageService : IImageService
         _logger = logger;
         var r2 = configuration.GetSection("CloudflareR2");
         _bucket = r2["BucketName"]!;
-        _publicUrl = r2["PublicUrl"]!.TrimEnd('/');
+        _publicUrl = (r2["PublicUrl"] ?? string.Empty).Trim().TrimEnd('/');
 
         _s3 = new AmazonS3Client(
             r2["AccessKeyId"],
@@ -41,6 +42,16 @@ public class R2ImageService : IImageService
             throw new InvalidOperationException($"Desteklenmeyen dosya türü: {ext}");
 
         var fileName = $"{folder}/{Guid.NewGuid()}.webp";
+
+        if (string.IsNullOrWhiteSpace(_publicUrl)
+            || !Uri.TryCreate(_publicUrl, UriKind.Absolute, out _))
+        {
+            throw new InvalidOperationException(
+                "CloudflareR2:PublicUrl must be the full absolute public base URL for the bucket " +
+                "(example: https://pub-xxxxxxxx.r2.dev). Use the value from R2 → your bucket → Settings → " +
+                "Public development URL. If this is wrong or empty, the storefront loads /products/... from your " +
+                "app host and images will not appear.");
+        }
 
         _logger.LogInformation(
             "R2 image save start. OriginalName={OriginalName}, Ext={Ext}, Length={Length}, TargetKey={Key}",
@@ -130,6 +141,39 @@ public class R2ImageService : IImageService
         catch
         {
             // Non-critical — ignore if object doesn't exist
+        }
+    }
+
+    public async Task<ImageStreamOpenResult?> TryOpenReadByObjectKeyAsync(
+        string objectKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(objectKey) || objectKey.Contains("..", StringComparison.Ordinal))
+            return null;
+
+        if (!objectKey.StartsWith("products/", StringComparison.OrdinalIgnoreCase)
+            && !objectKey.StartsWith("categories/", StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        try
+        {
+            var resp = await _s3.GetObjectAsync(
+                new GetObjectRequest { BucketName = _bucket, Key = objectKey },
+                cancellationToken);
+            // All storefront uploads are WebP; R2 may omit Content-Type on GetObject.
+            var contentType = string.IsNullOrEmpty(resp.Headers.ContentType)
+                ? "image/webp"
+                : resp.Headers.ContentType;
+            return new ImageStreamOpenResult(resp.ResponseStream, contentType);
+        }
+        catch (AmazonS3Exception ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+        catch (AmazonS3Exception ex)
+        {
+            _logger.LogWarning(ex, "R2 GetObject failed for key {Key}", objectKey);
+            return null;
         }
     }
 }

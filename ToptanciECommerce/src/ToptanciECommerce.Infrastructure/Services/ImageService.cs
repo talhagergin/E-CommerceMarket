@@ -58,4 +58,21 @@ public class ImageService : IImageService
 
         return Task.CompletedTask;
     }
+
+    public Task<ImageStreamOpenResult?> TryOpenReadByObjectKeyAsync(
+        string objectKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(objectKey) || objectKey.Contains("..", StringComparison.Ordinal))
+            return Task.FromResult<ImageStreamOpenResult?>(null);
+
+        if (!objectKey.StartsWith("uploads/", StringComparison.OrdinalIgnoreCase))
+            return Task.FromResult<ImageStreamOpenResult?>(null);
+
+        var path = Path.Combine(_env.WebRootPath, objectKey.Replace('/', Path.DirectorySeparatorChar));
+        if (!File.Exists(path)) return Task.FromResult<ImageStreamOpenResult?>(null);
+
+        var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.Asynchronous);
+        return Task.FromResult<ImageStreamOpenResult?>(new ImageStreamOpenResult(fs, "image/webp"));
+    }
 }

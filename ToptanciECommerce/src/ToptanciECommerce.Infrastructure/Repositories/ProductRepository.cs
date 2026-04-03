@@ -12,26 +12,26 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
     public async Task<Product?> GetBySlugAsync(string slug) =>
         await _dbSet
             .Include(p => p.Category)
-            .Include(p => p.Images.OrderBy(i => i.DisplayOrder))
+            .Include(p => p.Images.OrderByDescending(i => i.IsMain).ThenBy(i => i.DisplayOrder))
             .FirstOrDefaultAsync(p => p.Slug == slug);
 
     public async Task<Product?> GetWithImagesAsync(int id) =>
         await _dbSet
             .Include(p => p.Category)
-            .Include(p => p.Images.OrderBy(i => i.DisplayOrder))
+            .Include(p => p.Images.OrderByDescending(i => i.IsMain).ThenBy(i => i.DisplayOrder))
             .FirstOrDefaultAsync(p => p.Id == id);
 
     public async Task<IReadOnlyList<Product>> GetByCategoryAsync(int categoryId) =>
         await _dbSet
             .Where(p => p.CategoryId == categoryId && p.IsActive)
-            .Include(p => p.Images.Where(i => i.IsMain))
+            .Include(p => p.Images.OrderByDescending(i => i.IsMain).ThenBy(i => i.DisplayOrder))
             .OrderBy(p => p.Name)
             .ToListAsync();
 
     public async Task<IReadOnlyList<Product>> GetFeaturedAsync(int count = 8) =>
         await _dbSet
             .Where(p => p.IsFeatured && p.IsActive)
-            .Include(p => p.Images.Where(i => i.IsMain))
+            .Include(p => p.Images.OrderByDescending(i => i.IsMain).ThenBy(i => i.DisplayOrder))
             .OrderByDescending(p => p.CreatedAt)
             .Take(count)
             .ToListAsync();
@@ -44,7 +44,7 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
     {
         var query = _dbSet.Where(p => p.IsActive)
             .Include(p => p.Category)
-            .Include(p => p.Images.Where(i => i.IsMain))
+            .Include(p => p.Images.OrderByDescending(i => i.IsMain).ThenBy(i => i.DisplayOrder))
             .AsQueryable();
 
         if (categoryId.HasValue)

@@ -1,4 +1,5 @@
 @using ToptanciECommerce.Web.Areas.Admin
+@using ToptanciECommerce.Web.Helpers
 @using ToptanciECommerce.Application.DTOs.Product
 @using ToptanciECommerce.Application.DTOs.Category
 @using ToptanciECommerce.Application.DTOs.Order
@@ -6,4 +7,5 @@
 @using ToptanciECommerce.Domain.Enums
 @using ToptanciECommerce.Domain.Entities
 @using ToptanciECommerce.Infrastructure.Data
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers

@@ -11,4 +11,10 @@ public interface IImageService
 
     /// <summary>Deletes an image by its relative URL.</summary>
     Task DeleteImageAsync(string imageUrl);
+
+    /// <summary>
+    /// Opens an image by storage object key (e.g. products/guid.webp for R2).
+    /// Returns null if the key is invalid or the object does not exist.
+    /// </summary>
+    Task<ImageStreamOpenResult?> TryOpenReadByObjectKeyAsync(string objectKey, CancellationToken cancellationToken = default);
 }

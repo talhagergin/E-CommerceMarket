@@ -14,7 +14,7 @@ public class OrderRepository : GenericRepository<Order>, IOrderRepository
         await _dbSet
             .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Product)
-                    .ThenInclude(p => p.Images.Where(i => i.IsMain))
+                    .ThenInclude(p => p.Images.OrderByDescending(i => i.IsMain).ThenBy(i => i.DisplayOrder))
             .FirstOrDefaultAsync(o => o.Id == id);
 
     public async Task<Order?> GetByOrderNumberAsync(string orderNumber) =>

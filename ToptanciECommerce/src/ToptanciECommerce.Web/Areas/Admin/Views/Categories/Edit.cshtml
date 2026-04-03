@@ -42,7 +42,7 @@
                         <div class="col-12">
                             <label class="form-label">Mevcut Görsel</label>
                             <div>
-                                <img src="@ViewBag.ExistingImageUrl" alt="Mevcut görsel"
+                                <img src="@MediaUrlHelper.ForHtmlImg(ViewBag.ExistingImageUrl as string, Configuration)" alt="Mevcut görsel"
                                      class="img-thumbnail" style="height:80px;" />
                             </div>
                         </div>

@@ -109,7 +109,7 @@
                         @foreach (var img in existingImages)
                         {
                             <div class="position-relative" style="width:100px;">
-                                <img src="@img.ImageUrl" alt="Ürün Görseli"
+                                <img src="@MediaUrlHelper.ForHtmlImg(img.ImageUrl, Configuration)" alt="Ürün Görseli"
                                      class="img-thumbnail @(img.IsMain ? "border-primary border-2" : "")"
                                      style="width:100px;height:100px;object-fit:cover;" />
                                 @if (img.IsMain)

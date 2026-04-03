@@ -30,7 +30,7 @@
                         <td>
                             @if (!string.IsNullOrEmpty(cat.ImageUrl))
                             {
-                                <img src="@cat.ImageUrl" alt="@cat.Name"
+                                <img src="@MediaUrlHelper.ForHtmlImg(cat.ImageUrl, Configuration)" alt="@cat.Name"
                                      class="rounded" style="width:48px;height:48px;object-fit:cover;" />
                             }
                             else

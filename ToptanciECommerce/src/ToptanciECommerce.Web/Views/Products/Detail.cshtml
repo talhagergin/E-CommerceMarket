@@ -31,7 +31,7 @@
             <!-- Main Image -->
             <div class="rounded-3 border overflow-hidden mb-3 bg-light" style="padding-top:75%;position:relative;">
                 <img id="mainImage"
-                     src="@(mainImg?.ImageUrl ?? "/img/no-image.webp")"
+                     src="@(mainImg != null ? MediaUrlHelper.ForHtmlImg(mainImg.ImageUrl, Configuration) : "/img/no-image.webp")"
                      alt="@Model.Name"
                      style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:.5rem;"
                      class="rounded-3" />
@@ -42,8 +42,8 @@
                 <div class="d-flex gap-2 flex-wrap">
                     @foreach (var img in images)
                     {
-                        <img src="@img.ImageUrl" alt="@Model.Name"
-                             onclick="document.getElementById('mainImage').src='@img.ImageUrl'"
+                        <img src="@MediaUrlHelper.ForHtmlImg(img.ImageUrl, Configuration)" alt="@Model.Name"
+                             onclick="document.getElementById('mainImage').src='@MediaUrlHelper.ForHtmlImg(img.ImageUrl, Configuration)'"
                              class="rounded-2 border cursor-pointer @(img.IsMain ? "border-primary border-2" : "")"
                              style="width:72px;height:72px;object-fit:cover;cursor:pointer;transition:opacity .15s;"
                              onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'" />
@@ -210,7 +210,7 @@
                                 <div class="product-img-wrap">
                                     @if (rpImg != null)
                                     {
-                                        <img src="@rpImg.ImageUrl" alt="@rp.Name" loading="lazy" />
+                                        <img src="@MediaUrlHelper.ForHtmlImg(rpImg.ImageUrl, Configuration)" alt="@rp.Name" loading="lazy" />
                                     }
                                     else
                                     {

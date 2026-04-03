@@ -69,7 +69,7 @@
                                 <div class="product-img-wrap">
                                     @if (mainImg != null)
                                     {
-                                        <img src="@mainImg.ImageUrl" alt="@p.Name" loading="lazy" />
+                                        <img src="@MediaUrlHelper.ForHtmlImg(mainImg.ImageUrl, Configuration)" alt="@p.Name" loading="lazy" />
                                     }
                                     else
                                     {
