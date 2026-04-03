@@ -1,5 +1,7 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using ToptanciECommerce.Application.Interfaces;
+using ToptanciECommerce.Web.Models;
 
 namespace ToptanciECommerce.Web.Controllers;
 
@@ -24,5 +26,9 @@ public class HomeController : Controller
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error() => View();
+    public IActionResult Error(string? rid = null)
+    {
+        var requestId = rid ?? Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+        return View(new ErrorViewModel { RequestId = requestId });
+    }
 }

@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ToptanciECommerce.Infrastructure;
@@ -54,12 +56,65 @@ builder.Services.AddSession(options =>
 // ── MVC ─────────────────────────────────────────────────────────────────────
 builder.Services.AddControllersWithViews();
 
+// Large multipart uploads (product images)
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 50 * 1024 * 1024;
+});
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 50 * 1024 * 1024;
+});
+
 var app = builder.Build();
 
 // ── Middleware ───────────────────────────────────────────────────────────────
-if (!app.Environment.IsDevelopment())
+var showDetailedErrors = app.Configuration.GetValue<bool>("ShowDetailedErrors")
+    || string.Equals(
+        Environment.GetEnvironmentVariable("SHOW_DETAILED_ERRORS"),
+        "true",
+        StringComparison.OrdinalIgnoreCase);
+
+if (app.Environment.IsDevelopment() || showDetailedErrors)
 {
-    app.UseExceptionHandler("/Home/Error");
+    app.UseDeveloperExceptionPage();
+}
+else
+{
+    app.UseExceptionHandler(errorApp =>
+    {
+        errorApp.Run(async context =>
+        {
+            var feature = context.Features.Get<IExceptionHandlerPathFeature>();
+            var ex = feature?.Error;
+            var logger = context.RequestServices
+                .GetRequiredService<ILoggerFactory>()
+                .CreateLogger("GlobalException");
+
+            var traceId = context.TraceIdentifier;
+            if (ex != null)
+            {
+                logger.LogError(
+                    ex,
+                    "Unhandled exception. TraceId={TraceId}, Path={Path}, Endpoint={Endpoint}",
+                    traceId,
+                    feature?.Path,
+                    context.Request.Path);
+            }
+            else
+            {
+                logger.LogError(
+                    "Exception handler invoked but no exception (TraceId={TraceId}, Path={Path})",
+                    traceId,
+                    context.Request.Path);
+            }
+
+            // New request gets a different TraceIdentifier; pass the logged id for log correlation.
+            context.Response.Redirect(
+                $"/Home/Error?rid={Uri.EscapeDataString(traceId)}");
+            await Task.CompletedTask;
+        });
+    });
     app.UseHsts();
 }
 
@@ -83,6 +138,11 @@ app.MapControllerRoute(
 // ── Seed admin user + demo data on first run ─────────────────────────────────
 await SeedDataAsync(app); // Run migrations first
 await SeedAsync(app);     // Then seed roles/users
+
+app.Logger.LogInformation(
+    "Application ready. Environment={Environment}, ShowDetailedErrors={ShowDetailed}",
+    app.Environment.EnvironmentName,
+    showDetailedErrors);
 
 app.Run();
 
