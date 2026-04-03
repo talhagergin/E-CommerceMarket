@@ -6,7 +6,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace ToptanciECommerce.Infrastructure.Migrations
 {
-    /// <inheritdoc />
+    [Migration("20260403000000_InitialPostgres")]
     public partial class InitialPostgres : Migration
     {
         /// <inheritdoc />
