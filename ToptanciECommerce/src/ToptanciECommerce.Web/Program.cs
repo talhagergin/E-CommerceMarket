@@ -123,6 +123,18 @@ static async Task SeedDataAsync(WebApplication app)
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await db.Database.MigrateAsync();
+
+    // __EFMigrationsHistory may exist from a failed migration attempt and block EnsureCreated.
+    // Dropping it allows EnsureCreated to detect missing tables and create the full schema.
+    try
+    {
+        await db.Database.ExecuteSqlRawAsync("DROP TABLE IF EXISTS \"__EFMigrationsHistory\"");
+    }
+    catch { /* safe to ignore if it doesn't exist */ }
+
+    // EnsureCreated creates all tables from the model. It is idempotent:
+    // it checks if model tables exist before creating them, so existing data is never dropped.
+    await db.Database.EnsureCreatedAsync();
+
     await DataSeeder.SeedAsync(db);
 }
