@@ -1,0 +1,260 @@
+@using ToptanciECommerce.Domain.Entities
+@model Product
+@{
+    ViewData["Title"] = Model.Name;
+    var images = Model.Images.OrderBy(i => i.DisplayOrder).ToList();
+    var mainImg = images.FirstOrDefault(i => i.IsMain) ?? images.FirstOrDefault();
+    var related = (IReadOnlyList<Product>)ViewBag.RelatedProducts;
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Ana Sayfa</a></li>
+                <li class="breadcrumb-item">
+                    <a asp-controller="Products" asp-action="Index"
+                       asp-route-categoryId="@Model.CategoryId">@Model.Category.Name</a>
+                </li>
+                <li class="breadcrumb-item active text-truncate" style="max-width:200px;">@Model.Name</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row g-5">
+
+        <!-- Image Gallery -->
+        <div class="col-lg-6">
+            <!-- Main Image -->
+            <div class="rounded-3 border overflow-hidden mb-3 bg-light" style="padding-top:75%;position:relative;">
+                <img id="mainImage"
+                     src="@(mainImg?.ImageUrl ?? "/img/no-image.webp")"
+                     alt="@Model.Name"
+                     style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:.5rem;"
+                     class="rounded-3" />
+            </div>
+            <!-- Thumbnails -->
+            @if (images.Count > 1)
+            {
+                <div class="d-flex gap-2 flex-wrap">
+                    @foreach (var img in images)
+                    {
+                        <img src="@img.ImageUrl" alt="@Model.Name"
+                             onclick="document.getElementById('mainImage').src='@img.ImageUrl'"
+                             class="rounded-2 border cursor-pointer @(img.IsMain ? "border-primary border-2" : "")"
+                             style="width:72px;height:72px;object-fit:cover;cursor:pointer;transition:opacity .15s;"
+                             onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'" />
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Product Info -->
+        <div class="col-lg-6">
+            <div class="mb-2">
+                <span class="badge bg-light text-dark border">@Model.Category.Name</span>
+                @if (Model.IsFeatured)
+                {
+                    <span class="badge bg-warning text-dark ms-1">Öne Çıkan</span>
+                }
+            </div>
+
+            <h1 class="h3 fw-bold mb-1">@Model.Name</h1>
+            <p class="text-muted small mb-4">SKU: <span class="font-monospace">@Model.SKU</span></p>
+
+            @if (!string.IsNullOrEmpty(Model.ShortDescription))
+            {
+                <p class="text-secondary mb-4">@Model.ShortDescription</p>
+            }
+
+            <!-- Pricing -->
+            <div class="bg-light rounded-3 p-4 mb-4">
+                <div class="row g-3 align-items-center">
+                    <div class="col">
+                        <div class="text-muted small mb-1">Toptan Fiyat (KDV Dahil)</div>
+                        <div class="fs-2 fw-bold text-primary">@Model.WholesalePrice.ToString("N2") ₺</div>
+                        @if (Model.Price > Model.WholesalePrice)
+                        {
+                            <div class="text-decoration-line-through text-muted small">
+                                Liste: @Model.Price.ToString("N2") ₺
+                            </div>
+                        }
+                    </div>
+                    <div class="col-auto text-end">
+                        <div class="text-muted small mb-1">KDV</div>
+                        <div class="fw-semibold">%@Model.TaxRate</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stock & Quantity -->
+            <div class="mb-4">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    @if (Model.StockQuantity > 0)
+                    {
+                        <span class="badge bg-success fs-6 px-3 py-2">
+                            <i class="bi bi-check-circle me-1"></i> Stokta Var
+                        </span>
+                        <span class="text-muted small">@Model.StockQuantity adet</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger fs-6 px-3 py-2">
+                            <i class="bi bi-x-circle me-1"></i> Stokta Yok
+                        </span>
+                    }
+                </div>
+
+                <div class="text-muted small mb-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Minimum sipariş: <strong>@Model.MinOrderQuantity adet</strong>
+                    @if (Model.QuantityStep > 1)
+                    {
+                        <span> · Sipariş adımı: @Model.QuantityStep</span>
+                    }
+                </div>
+
+                @if (Model.StockQuantity > 0)
+                {
+                    <div class="d-flex gap-3 align-items-center">
+                        <div class="qty-stepper" id="detailStepper"
+                             data-product-id="@Model.Id"
+                             data-step="@Model.QuantityStep"
+                             data-min="@Model.MinOrderQuantity">
+                            <button type="button" onclick="stepDown(this)" style="width:40px;height:40px;">−</button>
+                            <input type="number" value="@Model.MinOrderQuantity"
+                                   min="@Model.MinOrderQuantity" step="@Model.QuantityStep"
+                                   style="width:70px;height:40px;font-size:1rem;" />
+                            <button type="button" onclick="stepUp(this)" style="width:40px;height:40px;">+</button>
+                        </div>
+                        <button class="btn btn-primary btn-lg px-4 flex-grow-1"
+                                onclick="addToCartDetail()">
+                            <i class="bi bi-cart-plus me-2"></i> Sepete Ekle
+                        </button>
+                    </div>
+                }
+            </div>
+
+            <!-- Shipping info -->
+            <div class="border rounded-3 p-3">
+                <div class="d-flex gap-3 small text-muted">
+                    <div><i class="bi bi-truck text-primary me-1"></i> Hızlı teslimat</div>
+                    <div><i class="bi bi-shield-check text-success me-1"></i> Güvenli ödeme</div>
+                    <div><i class="bi bi-arrow-repeat text-warning me-1"></i> Kolay iade</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Description -->
+    @if (!string.IsNullOrEmpty(Model.Description))
+    {
+        <div class="row mt-5">
+            <div class="col-lg-9">
+                <ul class="nav nav-tabs mb-4" id="detailTab">
+                    <li class="nav-item">
+                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#descTab">
+                            Ürün Açıklaması
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#specTab">
+                            Teknik Özellikler
+                        </button>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="descTab">
+                        <div class="text-secondary" style="line-height:1.8;">
+                            @Html.Raw(Model.Description?.Replace("\n", "<br/>"))
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="specTab">
+                        <table class="table table-bordered">
+                            <tbody>
+                                <tr><td class="fw-semibold" style="width:35%">SKU</td><td>@Model.SKU</td></tr>
+                                <tr><td class="fw-semibold">Kategori</td><td>@Model.Category.Name</td></tr>
+                                <tr><td class="fw-semibold">KDV Oranı</td><td>%@Model.TaxRate</td></tr>
+                                <tr><td class="fw-semibold">Min. Sipariş</td><td>@Model.MinOrderQuantity adet</td></tr>
+                                @if (Model.QuantityStep > 1)
+                                {
+                                    <tr><td class="fw-semibold">Sipariş Adımı</td><td>@Model.QuantityStep adet</td></tr>
+                                }
+                                @if (Model.Weight.HasValue)
+                                {
+                                    <tr><td class="fw-semibold">Ağırlık</td><td>@Model.Weight kg</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Related Products -->
+    @if (related.Any())
+    {
+        <div class="mt-5">
+            <h4 class="fw-bold mb-4">Benzer Ürünler</h4>
+            <div class="row row-cols-2 row-cols-md-4 g-3">
+                @foreach (var rp in related)
+                {
+                    var rpImg = rp.Images.FirstOrDefault(i => i.IsMain) ?? rp.Images.FirstOrDefault();
+                    <div class="col">
+                        <div class="product-card h-100">
+                            <a asp-action="Detail" asp-route-slug="@rp.Slug">
+                                <div class="product-img-wrap">
+                                    @if (rpImg != null)
+                                    {
+                                        <img src="@rpImg.ImageUrl" alt="@rp.Name" loading="lazy" />
+                                    }
+                                    else
+                                    {
+                                        <div class="d-flex align-items-center justify-content-center h-100 position-absolute inset-0">
+                                            <i class="bi bi-image fs-1 text-muted opacity-25"></i>
+                                        </div>
+                                    }
+                                </div>
+                            </a>
+                            <div class="product-body">
+                                <div class="product-sku mb-1">@rp.SKU</div>
+                                <a asp-action="Detail" asp-route-slug="@rp.Slug" class="text-decoration-none text-dark">
+                                    <div class="product-name mb-2">@rp.Name</div>
+                                </a>
+                                <span class="wholesale-price">@rp.WholesalePrice.ToString("N2") ₺</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+<script>
+function stepDown(btn) {
+    const wrap = btn.closest('.qty-stepper');
+    const input = wrap.querySelector('input');
+    const step = parseInt(wrap.dataset.step) || 1;
+    const min = parseInt(wrap.dataset.min) || 1;
+    input.value = Math.max(min, parseInt(input.value) - step);
+}
+function stepUp(btn) {
+    const wrap = btn.closest('.qty-stepper');
+    const input = wrap.querySelector('input');
+    const step = parseInt(wrap.dataset.step) || 1;
+    input.value = parseInt(input.value) + step;
+}
+function addToCartDetail() {
+    const stepper = document.getElementById('detailStepper');
+    const productId = parseInt(stepper.dataset.productId);
+    const quantity = parseInt(stepper.querySelector('input').value);
+    addToCart(productId, quantity);
+}
+</script>
+}

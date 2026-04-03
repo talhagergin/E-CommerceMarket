@@ -1,0 +1,145 @@
+@using ToptanciECommerce.Domain.Entities
+@using ToptanciECommerce.Domain.Enums
+@using ToptanciECommerce.Infrastructure.Data
+@model ApplicationUser
+@{
+    ViewData["Title"] = $"Müşteri: {Model.FullName}";
+    var orders = (IReadOnlyList<Order>)ViewBag.Orders;
+}
+
+<div class="d-flex gap-2 mb-4">
+    <a asp-action="Index" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+    <h5 class="fw-bold mb-0 align-self-center">@Model.FullName</h5>
+    @if (Model.IsApproved)
+    {
+        <span class="badge bg-success align-self-center">Onaylı</span>
+    }
+    else
+    {
+        <span class="badge bg-warning text-dark align-self-center">Onay Bekliyor</span>
+    }
+</div>
+
+<div class="row g-4">
+    <!-- Profile -->
+    <div class="col-lg-4">
+        <div class="bg-white rounded-3 border p-4 mb-3">
+            <h6 class="fw-semibold mb-3">Müşteri Bilgileri</h6>
+            <dl class="small row g-2 mb-0">
+                <dt class="col-5 text-muted">Ad Soyad</dt>
+                <dd class="col-7 fw-semibold">@Model.FullName</dd>
+                <dt class="col-5 text-muted">Firma</dt>
+                <dd class="col-7">@Model.CompanyName</dd>
+                <dt class="col-5 text-muted">E-posta</dt>
+                <dd class="col-7">@Model.Email</dd>
+                <dt class="col-5 text-muted">Telefon</dt>
+                <dd class="col-7">@(Model.Phone ?? "—")</dd>
+                <dt class="col-5 text-muted">Adres</dt>
+                <dd class="col-7">@(Model.Address ?? "—")</dd>
+                <dt class="col-5 text-muted">İlçe/Şehir</dt>
+                <dd class="col-7">@(Model.District ?? "") / @(Model.City ?? "—")</dd>
+                @if (!string.IsNullOrEmpty(Model.TaxNumber))
+                {
+                    <dt class="col-5 text-muted">Vergi No</dt>
+                    <dd class="col-7">@Model.TaxNumber</dd>
+                }
+                <dt class="col-5 text-muted">Kayıt</dt>
+                <dd class="col-7">@Model.CreatedAt.ToString("dd.MM.yyyy")</dd>
+            </dl>
+        </div>
+
+        <!-- Balance card -->
+        <div class="rounded-3 border p-4 mb-3 @(Model.Balance > 0 ? "bg-danger bg-opacity-10 border-danger" : Model.Balance < 0 ? "bg-success bg-opacity-10 border-success" : "bg-white")">
+            <h6 class="fw-semibold mb-1">Hesap Bakiyesi</h6>
+            <div class="fs-3 fw-bold @(Model.Balance > 0 ? "text-danger" : Model.Balance < 0 ? "text-success" : "text-muted")">
+                @Model.Balance.ToString("N2") ₺
+            </div>
+            <div class="small mt-1 @(Model.Balance > 0 ? "text-danger" : Model.Balance < 0 ? "text-success" : "text-muted")">
+                @if (Model.Balance > 0) { <span><i class="bi bi-exclamation-circle me-1"></i>Borçlu</span> }
+                else if (Model.Balance < 0) { <span><i class="bi bi-check-circle me-1"></i>Alacaklı</span> }
+                else { <span>Bakiye sıfır</span> }
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.TempPassword))
+        {
+            <div class="bg-white rounded-3 border p-3 mb-3">
+                <div class="small text-muted mb-1">Giriş Şifresi</div>
+                <code class="fs-6">@Model.TempPassword</code>
+            </div>
+        }
+
+        <div class="bg-white rounded-3 border p-4">
+            <h6 class="fw-semibold mb-3">İşlemler</h6>
+            <form asp-action="ToggleApproval" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <button type="submit" class="btn w-100 @(Model.IsApproved ? "btn-outline-warning" : "btn-success")">
+                    <i class="bi @(Model.IsApproved ? "bi-x-circle" : "bi-check-circle") me-1"></i>
+                    @(Model.IsApproved ? "Onayı Kaldır" : "Onayla")
+                </button>
+            </form>
+            <a asp-area="Admin" asp-controller="Payments" asp-action="Create"
+               asp-route-customerId="@Model.Id"
+               class="btn btn-success w-100 mt-2">
+                <i class="bi bi-cash-coin me-1"></i> Ödeme Al
+            </a>
+            <a asp-area="Admin" asp-controller="Orders" asp-action="Create"
+               asp-route-customerId="@Model.Id"
+               class="btn btn-primary w-100 mt-2">
+                <i class="bi bi-plus-lg me-1"></i> Manuel Sipariş Oluştur
+            </a>
+        </div>
+    </div>
+
+    <!-- Orders -->
+    <div class="col-lg-8">
+        <div class="bg-white rounded-3 border">
+            <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
+                <h6 class="fw-semibold mb-0">Siparişler (@orders.Count)</h6>
+            </div>
+            @if (!orders.Any())
+            {
+                <div class="p-4 text-muted text-center">Henüz sipariş yok.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Sipariş No</th>
+                                <th class="text-end">Tutar</th>
+                                <th>Durum</th>
+                                <th>Tarih</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in orders)
+                            {
+                                <tr>
+                                    <td><code>#@order.OrderNumber</code></td>
+                                    <td class="text-end fw-semibold">@order.TotalAmount.ToString("N2") ₺</td>
+                                    <td>
+                                        <span class="badge @order.Status.BadgeClass()">
+                                            @order.Status.ToTurkish()
+                                        </span>
+                                    </td>
+                                    <td class="text-muted small">@order.CreatedAt.ToString("dd.MM.yyyy")</td>
+                                    <td>
+                                        <a asp-area="Admin" asp-controller="Orders"
+                                           asp-action="Details" asp-route-id="@order.Id"
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>

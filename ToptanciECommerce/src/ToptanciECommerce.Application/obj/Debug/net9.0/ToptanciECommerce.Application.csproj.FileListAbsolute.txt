@@ -1,0 +1,15 @@
+C:\Users\TUF\Desktop\ToptanciECommerce\src\ToptanciECommerce.Application\obj\Debug\net9.0\ToptanciECommerce.Application.csproj.AssemblyReference.cache
+C:\Users\TUF\Desktop\ToptanciECommerce\src\ToptanciECommerce.Application\obj\Debug\net9.0\ToptanciECommerce.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\TUF\Desktop\ToptanciECommerce\src\ToptanciECommerce.Application\obj\Debug\net9.0\ToptanciECommerce.Application.AssemblyInfoInputs.cache
+C:\Users\TUF\Desktop\ToptanciECommerce\src\ToptanciECommerce.Application\obj\Debug\net9.0\ToptanciECommerce.Application.AssemblyInfo.cs
+C:\Users\TUF\Desktop\ToptanciECommerce\src\ToptanciECommerce.Application\obj\Debug\net9.0\ToptanciECommerce.Application.csproj.CoreCompileInputs.cache
+C:\Users\TUF\Desktop\ToptanciECommerce\src\ToptanciECommerce.Application\bin\Debug\net9.0\ToptanciECommerce.Application.deps.json
+C:\Users\TUF\Desktop\ToptanciECommerce\src\ToptanciECommerce.Application\bin\Debug\net9.0\ToptanciECommerce.Application.dll
+C:\Users\TUF\Desktop\ToptanciECommerce\src\ToptanciECommerce.Application\bin\Debug\net9.0\ToptanciECommerce.Application.pdb
+C:\Users\TUF\Desktop\ToptanciECommerce\src\ToptanciECommerce.Application\bin\Debug\net9.0\ToptanciECommerce.Domain.dll
+C:\Users\TUF\Desktop\ToptanciECommerce\src\ToptanciECommerce.Application\bin\Debug\net9.0\ToptanciECommerce.Domain.pdb
+C:\Users\TUF\Desktop\ToptanciECommerce\src\ToptanciECommerce.Application\obj\Debug\net9.0\Toptanci.B0C79C3F.Up2Date
+C:\Users\TUF\Desktop\ToptanciECommerce\src\ToptanciECommerce.Application\obj\Debug\net9.0\ToptanciECommerce.Application.dll
+C:\Users\TUF\Desktop\ToptanciECommerce\src\ToptanciECommerce.Application\obj\Debug\net9.0\refint\ToptanciECommerce.Application.dll
+C:\Users\TUF\Desktop\ToptanciECommerce\src\ToptanciECommerce.Application\obj\Debug\net9.0\ToptanciECommerce.Application.pdb
+C:\Users\TUF\Desktop\ToptanciECommerce\src\ToptanciECommerce.Application\obj\Debug\net9.0\ref\ToptanciECommerce.Application.dll

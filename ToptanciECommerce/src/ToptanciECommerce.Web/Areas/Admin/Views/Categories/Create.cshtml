@@ -1,0 +1,60 @@
+@model ToptanciECommerce.Application.DTOs.Category.CreateCategoryDto
+@{
+    ViewData["Title"] = "Yeni Kategori";
+}
+
+<div class="d-flex align-items-center gap-2 mb-4">
+    <a asp-action="Index" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+    <h6 class="fw-semibold mb-0">Yeni Kategori Ekle</h6>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+            <div class="bg-white rounded-3 border p-4 mb-4">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label asp-for="Name" class="form-label">Kategori Adı <span class="text-danger">*</span></label>
+                        <input asp-for="Name" class="form-control" placeholder="Ör: Elektronik, Temizlik Ürünleri..." />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Description" class="form-label">Açıklama</label>
+                        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="ParentCategoryId" class="form-label">Üst Kategori</label>
+                        <select asp-for="ParentCategoryId" asp-items="ViewBag.ParentCategories" class="form-select">
+                            <option value="">-- Ana Kategori --</option>
+                        </select>
+                        <div class="form-text">Boş bırakırsanız ana kategori olur.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="DisplayOrder" class="form-label">Sıralama</label>
+                        <input asp-for="DisplayOrder" type="number" class="form-control" placeholder="0" />
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Image" class="form-label">Kategori Görseli</label>
+                        <input asp-for="Image" type="file" class="form-control" accept="image/*" />
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                            <label asp-for="IsActive" class="form-check-label">Aktif</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="bi bi-check2 me-1"></i> Kaydet
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary">İptal</a>
+            </div>
+        </form>
+    </div>
+</div>

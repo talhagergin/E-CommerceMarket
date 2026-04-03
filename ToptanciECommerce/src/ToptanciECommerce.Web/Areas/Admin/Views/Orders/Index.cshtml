@@ -1,0 +1,108 @@
+@using ToptanciECommerce.Domain.Entities
+@using ToptanciECommerce.Domain.Enums
+@model IReadOnlyList<Order>
+@{
+    ViewData["Title"] = "Siparişler";
+}
+
+<!-- Status Filter Tabs -->
+<div class="d-flex gap-2 flex-wrap mb-4">
+    <a asp-action="Index" class="btn btn-sm @(ViewBag.SelectedStatus == null ? "btn-primary" : "btn-outline-secondary")">
+        Tümü (@ViewBag.TotalCount)
+    </a>
+    @foreach (OrderStatus status in ViewBag.Statuses)
+    {
+        <a asp-action="Index" asp-route-status="@((int)status)"
+           class="btn btn-sm @(ViewBag.SelectedStatus?.ToString() == status.ToString() ? "btn-primary" : "btn-outline-secondary")">
+            @status.ToTurkish()
+        </a>
+    }
+</div>
+
+<!-- Search -->
+<div class="bg-white rounded-3 border p-3 mb-4">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-6">
+            <input type="text" name="search" value="@ViewBag.Search"
+                   class="form-control" placeholder="Sipariş no, müşteri adı veya e-posta..." />
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search"></i>
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="bg-white rounded-3 border">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Sipariş No</th>
+                    <th>Müşteri</th>
+                    <th>Şehir</th>
+                    <th>Tutar</th>
+                    <th>Durum</th>
+                    <th>Tarih</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in Model)
+                {
+                    <tr>
+                        <td><code class="fw-semibold">#@order.OrderNumber</code></td>
+                        <td>
+                            <div class="fw-semibold">@order.CustomerName</div>
+                            <small class="text-muted">@order.CustomerCompany</small><br/>
+                            <small class="text-muted">@order.CustomerEmail</small>
+                        </td>
+                        <td>@order.ShippingCity</td>
+                        <td class="fw-semibold">
+                            @order.TotalAmount.ToString("C2", new System.Globalization.CultureInfo("tr-TR"))
+                        </td>
+                        <td>
+                            @{
+                                var bc = order.Status switch
+                                {
+                                    OrderStatus.Pending => "bg-warning text-dark",
+                                    OrderStatus.PaymentSucceeded or OrderStatus.Processing => "bg-info",
+                                    OrderStatus.Shipped => "bg-primary",
+                                    OrderStatus.Delivered => "bg-success",
+                                    OrderStatus.Cancelled or OrderStatus.PaymentFailed => "bg-danger",
+                                    _ => "bg-secondary"
+                                };
+                            }
+                            <span class="badge @bc">@order.Status.ToTurkish()</span>
+                        </td>
+                        <td class="text-muted small">@order.CreatedAt.ToString("dd.MM.yyyy")<br/>@order.CreatedAt.ToString("HH:mm")</td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if ((int)ViewBag.TotalPages > 1)
+    {
+        <div class="p-3 border-top d-flex justify-content-center">
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    @for (int i = 1; i <= (int)ViewBag.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == (int)ViewBag.Page ? "active" : "")">
+                            <a class="page-link" asp-action="Index"
+                               asp-route-page="@i"
+                               asp-route-search="@ViewBag.Search">@i</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        </div>
+    }
+</div>
