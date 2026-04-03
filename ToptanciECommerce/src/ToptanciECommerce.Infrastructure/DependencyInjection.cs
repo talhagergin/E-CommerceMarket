@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +21,11 @@ public static class DependencyInjection
             options.UseNpgsql(
                 configuration.GetConnectionString("DefaultConnection"),
                 b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
+
+        // Persist DP keys in PostgreSQL so session/auth/antiforgery cookies survive deploys (Render, Docker).
+        services.AddDataProtection()
+            .PersistKeysToDbContext<ApplicationDbContext>()
+            .SetApplicationName("ToptanciECommerce");
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
