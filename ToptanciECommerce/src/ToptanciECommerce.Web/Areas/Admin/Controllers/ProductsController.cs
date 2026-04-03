@@ -108,6 +108,7 @@ public class ProductsController : Controller
             bool firstImage = true;
             foreach (var file in dto.NewImages)
             {
+                if (file.Length == 0) continue;
                 var url = await _imageService.SaveImageAsync(file, "products");
                 await _uow.Products.AddProductImageAsync(new ProductImage
                 {
@@ -224,6 +225,7 @@ public class ProductsController : Controller
             bool hasMain = product.Images.Any(i => i.IsMain);
             foreach (var file in dto.NewImages)
             {
+                if (file.Length == 0) continue;
                 var url = await _imageService.SaveImageAsync(file, "products");
                 await _uow.Products.AddProductImageAsync(new ProductImage
                 {

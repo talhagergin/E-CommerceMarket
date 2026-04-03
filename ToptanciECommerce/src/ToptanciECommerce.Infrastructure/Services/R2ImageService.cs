@@ -54,13 +54,16 @@ public class R2ImageService : IImageService
         await image.SaveAsWebpAsync(ms);
         ms.Position = 0;
 
+        // R2 does not support S3 ACLs. R2 also does not support the streaming SigV4 + default
+        // checksum behavior used by recent AWSSDK.S3 — see Cloudflare R2 aws-sdk-net example.
         await _s3.PutObjectAsync(new PutObjectRequest
         {
             BucketName = _bucket,
             Key = fileName,
             InputStream = ms,
             ContentType = "image/webp",
-            CannedACL = S3CannedACL.PublicRead
+            DisablePayloadSigning = true,
+            DisableDefaultChecksumValidation = true
         });
 
         return $"{_publicUrl}/{fileName}";

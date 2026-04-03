@@ -153,13 +153,24 @@
         });
     });
     dropZone.addEventListener('drop', ev => {
-        const files = ev.dataTransfer.files;
-        addFiles(files);
+        mergeFilesIntoInput(ev.dataTransfer.files);
     });
-    imageInput.addEventListener('change', () => addFiles(imageInput.files));
+    imageInput.addEventListener('change', () => rebuildPreview());
 
-    function addFiles(files) {
-        Array.from(files).forEach(file => {
+    /** Drag-drop does not fill the file input — merge into input so the form posts files */
+    function mergeFilesIntoInput(newFiles) {
+        const dt = new DataTransfer();
+        Array.from(imageInput.files).forEach(f => dt.items.add(f));
+        Array.from(newFiles).forEach(file => {
+            if (file.type.startsWith('image/')) dt.items.add(file);
+        });
+        imageInput.files = dt.files;
+        rebuildPreview();
+    }
+
+    function rebuildPreview() {
+        previewContainer.innerHTML = '';
+        Array.from(imageInput.files).forEach((file, idx) => {
             if (!file.type.startsWith('image/')) return;
             const reader = new FileReader();
             reader.onload = e => {
@@ -167,12 +178,22 @@
                 div.style.cssText = 'position:relative;width:90px;height:90px;';
                 div.innerHTML = `
                     <img src="${e.target.result}" style="width:90px;height:90px;object-fit:cover;border-radius:8px;border:2px solid #dee2e6;">
-                    <button type="button" onclick="this.parentElement.remove()"
+                    <button type="button" data-remove-index="${idx}"
                         style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:none;background:#ef4444;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">×</button>`;
                 previewContainer.appendChild(div);
             };
             reader.readAsDataURL(file);
         });
     }
+
+    previewContainer.addEventListener('click', ev => {
+        const btn = ev.target.closest('[data-remove-index]');
+        if (!btn) return;
+        const idx = parseInt(btn.getAttribute('data-remove-index'), 10);
+        const dt = new DataTransfer();
+        Array.from(imageInput.files).forEach((f, i) => { if (i !== idx) dt.items.add(f); });
+        imageInput.files = dt.files;
+        rebuildPreview();
+    });
 </script>
 }

@@ -50,7 +50,7 @@ public class CategoriesController : Controller
         var slug = GenerateSlug(dto.Name);
 
         string? imageUrl = null;
-        if (dto.Image != null)
+        if (dto.Image is { Length: > 0 })
             imageUrl = await _imageService.SaveImageAsync(dto.Image, "categories");
 
         var category = new Category
@@ -108,7 +108,7 @@ public class CategoriesController : Controller
         var category = await _uow.Categories.GetByIdAsync(id);
         if (category == null) return NotFound();
 
-        if (dto.Image != null)
+        if (dto.Image is { Length: > 0 })
         {
             // Delete old image
             if (!string.IsNullOrEmpty(category.ImageUrl))
