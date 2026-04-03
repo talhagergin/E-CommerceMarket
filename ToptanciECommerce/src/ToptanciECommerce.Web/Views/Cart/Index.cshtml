@@ -48,12 +48,12 @@
 
             <!-- Cart Items -->
             <div class="col-lg-8">
-                <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center justify-content-between gap-2 mb-3">
                     <h5 class="fw-bold mb-0">
                         <i class="bi bi-cart3 me-2 text-primary"></i>
                         Sepetim <span class="badge bg-primary ms-1">@Model.TotalQuantity adet</span>
                     </h5>
-                    <form asp-action="Clear" method="post">
+                    <form asp-action="Clear" method="post" class="flex-shrink-0">
                         @Html.AntiForgeryToken()
                         <button type="submit" class="btn btn-sm btn-outline-danger"
                                 onclick="return confirm('Sepeti tamamen temizlemek istediğinizden emin misiniz?')">
@@ -65,73 +65,77 @@
                 <div class="bg-white rounded-3 border" id="cartItemsContainer">
                     @foreach (var item in Model.Items)
                     {
-                        <div class="cart-row d-flex align-items-center gap-3 p-3 border-bottom"
+                        <div class="cart-row cart-row-store d-flex flex-column flex-md-row align-items-stretch align-items-md-center gap-3 p-3 border-bottom"
                              id="row-@item.ProductId">
-                            <!-- Image -->
-                            <div class="flex-shrink-0">
-                                @if (!string.IsNullOrEmpty(item.ImageUrl))
-                                {
-                                    <img src="@MediaUrlHelper.ForHtmlImg(item.ImageUrl, Configuration)" alt="@item.ProductName"
-                                         class="rounded-2"
-                                         style="width:72px;height:72px;object-fit:cover;" />
-                                }
-                                else
-                                {
-                                    <div class="bg-light rounded-2 d-flex align-items-center justify-content-center"
-                                         style="width:72px;height:72px;">
-                                        <i class="bi bi-image text-muted fs-4"></i>
+                            <div class="d-flex gap-3 flex-grow-1 min-w-0">
+                                <!-- Image -->
+                                <div class="flex-shrink-0">
+                                    @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                    {
+                                        <img src="@MediaUrlHelper.ForHtmlImg(item.ImageUrl, Configuration)" alt="@item.ProductName"
+                                             class="rounded-2"
+                                             style="width:72px;height:72px;object-fit:cover;" />
+                                    }
+                                    else
+                                    {
+                                        <div class="bg-light rounded-2 d-flex align-items-center justify-content-center"
+                                             style="width:72px;height:72px;">
+                                            <i class="bi bi-image text-muted fs-4"></i>
+                                        </div>
+                                    }
+                                </div>
+
+                                <!-- Info -->
+                                <div class="flex-grow-1 min-w-0">
+                                    <a asp-controller="Products" asp-action="Detail"
+                                       asp-route-slug="@item.ProductSlug"
+                                       class="text-decoration-none text-dark fw-semibold">
+                                        @item.ProductName
+                                    </a>
+                                    <div class="text-muted small font-monospace">@item.SKU</div>
+                                    <div class="text-muted small">
+                                        Birim: <strong>@item.UnitPrice.ToString("N2") ₺</strong>
+                                        · KDV: %@item.TaxRate
                                     </div>
-                                }
-                            </div>
-
-                            <!-- Info -->
-                            <div class="flex-grow-1 min-w-0">
-                                <a asp-controller="Products" asp-action="Detail"
-                                   asp-route-slug="@item.ProductSlug"
-                                   class="text-decoration-none text-dark fw-semibold">
-                                    @item.ProductName
-                                </a>
-                                <div class="text-muted small font-monospace">@item.SKU</div>
-                                <div class="text-muted small">
-                                    Birim: <strong>@item.UnitPrice.ToString("N2") ₺</strong>
-                                    · KDV: %@item.TaxRate
                                 </div>
                             </div>
 
-                            <!-- Qty Stepper -->
-                            <div class="flex-shrink-0">
-                                <div class="qty-stepper"
-                                     data-product-id="@item.ProductId"
-                                     data-step="@item.QuantityStep"
-                                     data-min="@item.MinOrderQuantity"
-                                     data-stock="@item.StockQuantity">
-                                    <button type="button" onclick="cartStepDown(this)">−</button>
-                                    <input type="number"
-                                           value="@item.Quantity"
-                                           min="@item.MinOrderQuantity"
-                                           step="@item.QuantityStep"
-                                           onchange="cartUpdateQty(this)"
-                                           style="width:65px;" />
-                                    <button type="button" onclick="cartStepUp(this)">+</button>
+                            <div class="cart-row-actions ms-md-auto">
+                                <!-- Qty Stepper -->
+                                <div class="flex-shrink-0">
+                                    <div class="qty-stepper"
+                                         data-product-id="@item.ProductId"
+                                         data-step="@item.QuantityStep"
+                                         data-min="@item.MinOrderQuantity"
+                                         data-stock="@item.StockQuantity">
+                                        <button type="button" onclick="cartStepDown(this)">−</button>
+                                        <input type="number"
+                                               value="@item.Quantity"
+                                               min="@item.MinOrderQuantity"
+                                               step="@item.QuantityStep"
+                                               onchange="cartUpdateQty(this)"
+                                               style="width:65px;" />
+                                        <button type="button" onclick="cartStepUp(this)">+</button>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <!-- Line Total -->
-                            <div class="flex-shrink-0 text-end" style="min-width:90px;">
-                                <div class="fw-bold text-primary fs-6 line-total"
-                                     data-product-id="@item.ProductId">
-                                    @item.LineTotal.ToString("N2") ₺
+                                <!-- Line Total -->
+                                <div class="flex-shrink-0 text-md-end" style="min-width:min(100%,90px);">
+                                    <div class="fw-bold text-primary fs-6 line-total"
+                                         data-product-id="@item.ProductId">
+                                        @item.LineTotal.ToString("N2") ₺
+                                    </div>
+                                    <div class="text-muted small">KDV hariç</div>
                                 </div>
-                                <div class="text-muted small">KDV hariç</div>
-                            </div>
 
-                            <!-- Remove -->
-                            <div class="flex-shrink-0">
-                                <button class="btn btn-sm btn-outline-danger"
-                                        onclick="cartRemove(@item.ProductId)"
-                                        title="Kaldır">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+                                <!-- Remove -->
+                                <div class="flex-shrink-0">
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                            onclick="cartRemove(@item.ProductId)"
+                                            title="Kaldır">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     }
@@ -147,7 +151,7 @@
 
             <!-- Order Summary -->
             <div class="col-lg-4">
-                <div class="bg-white rounded-3 border p-4 sticky-top" style="top:80px;">
+                <div class="bg-white rounded-3 border p-4 order-summary-sticky">
                     <h6 class="fw-bold mb-3">Sipariş Özeti</h6>
 
                     <div class="d-flex justify-content-between mb-2 text-muted small">

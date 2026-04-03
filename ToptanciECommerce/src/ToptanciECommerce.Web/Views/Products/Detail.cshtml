@@ -17,13 +17,13 @@
                     <a asp-controller="Products" asp-action="Index"
                        asp-route-categoryId="@Model.CategoryId">@Model.Category.Name</a>
                 </li>
-                <li class="breadcrumb-item active text-truncate" style="max-width:200px;">@Model.Name</li>
+                <li class="breadcrumb-item active text-break">@Model.Name</li>
             </ol>
         </nav>
     </div>
 </div>
 
-<div class="container py-5">
+<div class="container py-4 py-lg-5">
     <div class="row g-5">
 
         <!-- Image Gallery -->
@@ -83,7 +83,7 @@
                             </div>
                         }
                     </div>
-                    <div class="col-auto text-end">
+                    <div class="col-12 col-sm-auto text-sm-end mt-2 mt-sm-0">
                         <div class="text-muted small mb-1">KDV</div>
                         <div class="fw-semibold">%@Model.TaxRate</div>
                     </div>
@@ -119,8 +119,8 @@
 
                 @if (Model.StockQuantity > 0)
                 {
-                    <div class="d-flex gap-3 align-items-center">
-                        <div class="qty-stepper" id="detailStepper"
+                    <div class="d-flex flex-column flex-sm-row gap-3 align-items-stretch align-items-sm-center">
+                        <div class="qty-stepper justify-content-center justify-content-sm-start" id="detailStepper"
                              data-product-id="@Model.Id"
                              data-step="@Model.QuantityStep"
                              data-min="@Model.MinOrderQuantity">
@@ -130,7 +130,7 @@
                                    style="width:70px;height:40px;font-size:1rem;" />
                             <button type="button" onclick="stepUp(this)" style="width:40px;height:40px;">+</button>
                         </div>
-                        <button class="btn btn-primary btn-lg px-4 flex-grow-1"
+                        <button type="button" class="btn btn-primary btn-lg px-4 flex-grow-1"
                                 onclick="addToCartDetail()">
                             <i class="bi bi-cart-plus me-2"></i> Sepete Ekle
                         </button>
@@ -140,10 +140,10 @@
 
             <!-- Shipping info -->
             <div class="border rounded-3 p-3">
-                <div class="d-flex gap-3 small text-muted">
-                    <div><i class="bi bi-truck text-primary me-1"></i> Hızlı teslimat</div>
-                    <div><i class="bi bi-shield-check text-success me-1"></i> Güvenli ödeme</div>
-                    <div><i class="bi bi-arrow-repeat text-warning me-1"></i> Kolay iade</div>
+                <div class="d-flex flex-column flex-sm-row flex-wrap gap-2 gap-sm-3 small text-muted">
+                    <div class="text-nowrap"><i class="bi bi-truck text-primary me-1"></i> Hızlı teslimat</div>
+                    <div class="text-nowrap"><i class="bi bi-shield-check text-success me-1"></i> Güvenli ödeme</div>
+                    <div class="text-nowrap"><i class="bi bi-arrow-repeat text-warning me-1"></i> Kolay iade</div>
                 </div>
             </div>
         </div>
@@ -154,7 +154,7 @@
     {
         <div class="row mt-5">
             <div class="col-lg-9">
-                <ul class="nav nav-tabs mb-4" id="detailTab">
+                <ul class="nav nav-tabs mb-4 flex-nowrap overflow-auto pb-1" id="detailTab" role="tablist">
                     <li class="nav-item">
                         <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#descTab">
                             Ürün Açıklaması
@@ -173,7 +173,8 @@
                         </div>
                     </div>
                     <div class="tab-pane fade" id="specTab">
-                        <table class="table table-bordered">
+                        <div class="table-responsive">
+                        <table class="table table-bordered mb-0">
                             <tbody>
                                 <tr><td class="fw-semibold" style="width:35%">SKU</td><td>@Model.SKU</td></tr>
                                 <tr><td class="fw-semibold">Kategori</td><td>@Model.Category.Name</td></tr>
@@ -189,6 +190,7 @@
                                 }
                             </tbody>
                         </table>
+                        </div>
                     </div>
                 </div>
             </div>

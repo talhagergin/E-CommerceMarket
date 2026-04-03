@@ -10,11 +10,10 @@ async function updateCartBadge() {
         const res = await fetch('/Cart/Count');
         if (res.ok) {
             const count = await res.json();
-            const badge = document.getElementById('cart-count');
-            if (badge) {
+            document.querySelectorAll('.cart-count-badge').forEach((badge) => {
                 badge.textContent = count;
                 badge.style.display = count > 0 ? 'block' : 'none';
-            }
+            });
         }
     } catch { /* ignore */ }
 }

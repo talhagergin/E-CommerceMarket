@@ -50,84 +50,115 @@
 
 <!-- Header -->
 <header class="bg-white border-bottom sticky-top shadow-sm">
-    <div class="container py-3">
-        <div class="row align-items-center g-3">
-            <!-- Logo -->
+    <div class="container py-2 py-md-3">
+        <div class="row align-items-center g-2 g-md-3">
+            <!-- Logo + cart (one row on mobile) -->
             <div class="col-auto">
                 <a asp-controller="Home" asp-action="Index" class="text-decoration-none">
-                    <span class="fw-bold fs-4 text-primary">Toptanci<span class="text-dark">B2B</span></span>
+                    <span class="fw-bold text-primary store-logo">Toptanci<span class="text-dark">B2B</span></span>
                 </a>
             </div>
-
-            <!-- Search -->
-            <div class="col">
-                <form asp-controller="Products" asp-action="Index" method="get">
-                    <div class="input-group">
+            <div class="col-auto ms-auto d-md-none">
+                <a asp-controller="Cart" asp-action="Index" class="btn btn-outline-primary position-relative btn-sm">
+                    <i class="bi bi-cart3 fs-5"></i>
+                    <span class="cart-count-badge position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none">0</span>
+                </a>
+            </div>
+            <!-- Search full width under logo row on mobile -->
+            <div class="col-12 col-md">
+                <form asp-controller="Products" asp-action="Index" method="get" class="header-search-form">
+                    <div class="input-group input-group-sm header-search">
                         <input type="text" name="search" class="form-control"
-                               placeholder="Ürün adı veya SKU arayın..." />
-                        <button class="btn btn-primary" type="submit">
+                               placeholder="Ürün veya SKU ara..." aria-label="Ürün ara" />
+                        <button class="btn btn-primary" type="submit" aria-label="Ara">
                             <i class="bi bi-search"></i>
                         </button>
                     </div>
                 </form>
             </div>
-
-            <!-- Cart -->
-            <div class="col-auto">
+            <!-- Cart desktop -->
+            <div class="col-auto d-none d-md-block">
                 <a asp-controller="Cart" asp-action="Index" class="btn btn-outline-primary position-relative">
                     <i class="bi bi-cart3 fs-5"></i>
-                    <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none">0</span>
+                    <span class="cart-count-badge position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none">0</span>
                 </a>
+            </div>
+        </div>
+        <!-- Mobile: account links (top bar is hidden on xs) -->
+        <div class="d-md-none border-top mt-2 pt-2 small">
+            <div class="d-flex flex-wrap align-items-center gap-2 justify-content-between">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <span class="text-truncate text-muted" style="max-width:45%"><i class="bi bi-person-check me-1"></i>@User.Identity.Name</span>
+                    <div class="d-flex flex-wrap gap-2 justify-content-end">
+                        <a asp-controller="Orders" asp-action="Index" class="text-decoration-none">Siparişlerim</a>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index" class="text-decoration-none text-warning">Admin</a>
+                        }
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-link btn-sm text-danger p-0">Çıkış</button>
+                        </form>
+                    </div>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Login" class="text-decoration-none">Giriş</a>
+                    <a asp-controller="Account" asp-action="Register" class="text-decoration-none">Kayıt Ol</a>
+                }
             </div>
         </div>
     </div>
 
     <!-- Category Navigation -->
-    <nav class="border-top bg-light">
-        <div class="container">
-            <div class="d-flex gap-0 py-1 flex-wrap align-items-center">
-                <a asp-controller="Products" asp-action="Index"
-                   class="btn btn-sm btn-link text-dark text-decoration-none px-2">
-                    <i class="bi bi-grid me-1"></i> Tüm Ürünler
-                </a>
-                @foreach (var cat in navCategories)
-                {
-                    if (cat.SubCategories.Any())
+    <nav class="border-top bg-light" aria-label="Kategoriler">
+        <div class="container px-2 px-md-3">
+            <div class="category-nav-scroll py-1">
+                <div class="category-nav-inner">
+                    <a asp-controller="Products" asp-action="Index"
+                       class="btn btn-sm btn-link text-dark text-decoration-none px-2 text-nowrap">
+                        <i class="bi bi-grid me-1"></i> Tüm Ürünler
+                    </a>
+                    @foreach (var cat in navCategories)
                     {
-                        <div class="dropdown">
-                            <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@cat.Id"
-                               class="btn btn-sm btn-link text-dark text-decoration-none px-2 dropdown-toggle"
-                               data-bs-toggle="dropdown" data-bs-auto-close="true">
-                                @cat.Name
-                            </a>
-                            <ul class="dropdown-menu shadow-sm border-0" style="min-width:200px;">
-                                <li>
-                                    <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@cat.Id"
-                                       class="dropdown-item fw-semibold">
-                                        <i class="bi bi-folder me-1"></i> Tümü — @cat.Name
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider my-1" /></li>
-                                @foreach (var sub in cat.SubCategories)
-                                {
+                        if (cat.SubCategories.Any())
+                        {
+                            <div class="dropdown">
+                                <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@cat.Id"
+                                   class="btn btn-sm btn-link text-dark text-decoration-none px-2 dropdown-toggle text-nowrap"
+                                   data-bs-toggle="dropdown" data-bs-auto-close="true">
+                                    @cat.Name
+                                </a>
+                                <ul class="dropdown-menu shadow-sm border-0" style="min-width:200px;">
                                     <li>
-                                        <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@sub.Id"
-                                           class="dropdown-item small">
-                                            @sub.Name
+                                        <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@cat.Id"
+                                           class="dropdown-item fw-semibold">
+                                            <i class="bi bi-folder me-1"></i> Tümü — @cat.Name
                                         </a>
                                     </li>
-                                }
-                            </ul>
-                        </div>
+                                    <li><hr class="dropdown-divider my-1" /></li>
+                                    @foreach (var sub in cat.SubCategories)
+                                    {
+                                        <li>
+                                            <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@sub.Id"
+                                               class="dropdown-item small">
+                                                @sub.Name
+                                            </a>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+                        else
+                        {
+                            <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@cat.Id"
+                               class="btn btn-sm btn-link text-dark text-decoration-none px-2 text-nowrap">
+                                @cat.Name
+                            </a>
+                        }
                     }
-                    else
-                    {
-                        <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@cat.Id"
-                           class="btn btn-sm btn-link text-dark text-decoration-none px-2">
-                            @cat.Name
-                        </a>
-                    }
-                }
+                </div>
             </div>
         </div>
     </nav>
@@ -142,11 +173,11 @@
 <footer class="bg-dark text-white mt-5 pt-5 pb-3">
     <div class="container">
         <div class="row g-4">
-            <div class="col-md-4">
+            <div class="col-12 col-md-6 col-lg-4">
                 <h5 class="fw-bold text-white">ToptanciB2B</h5>
-                <p class="text-secondary small">Profesyonel toptan alışveriş platformu. Güvenilir tedarik zinciri çözümlerimizle işinizi büyütün.</p>
+                <p class="text-secondary small mb-0">Profesyonel toptan alışveriş platformu. Güvenilir tedarik zinciri çözümlerimizle işinizi büyütün.</p>
             </div>
-            <div class="col-md-2">
+            <div class="col-6 col-md-3 col-lg-2">
                 <h6 class="text-white mb-3">Hızlı Bağlantılar</h6>
                 <ul class="list-unstyled small text-secondary">
                     <li><a asp-controller="Home" asp-action="Index" class="text-secondary text-decoration-none">Ana Sayfa</a></li>
@@ -154,7 +185,7 @@
                     <li><a asp-controller="Account" asp-action="Login" class="text-secondary text-decoration-none">Giriş Yap</a></li>
                 </ul>
             </div>
-            <div class="col-md-3">
+            <div class="col-6 col-md-3 col-lg-3">
                 <h6 class="text-white mb-3">İletişim</h6>
                 <ul class="list-unstyled small text-secondary">
                     <li><i class="bi bi-envelope me-2"></i>info@toptanci.com</li>

@@ -73,8 +73,19 @@
     font-weight: 600;
 }
 
-/* ── Cart Floating Badge ── */
-#cart-count { font-size: .65rem; min-width: 1.2rem; line-height: 1.2rem; }
+/* ── Cart floating badge (header mobile + desktop) ── */
+.cart-count-badge { font-size: .65rem; min-width: 1.2rem; line-height: 1.2rem; }
+
+/* ── Store logo: readable on small screens, larger on md+ ── */
+.store-logo { font-size: 1.15rem; }
+@media (min-width: 768px) {
+    .store-logo { font-size: 1.5rem; }
+    .header-search.input-group-sm > .form-control,
+    .header-search.input-group-sm > .btn {
+        padding: .375rem .75rem;
+        font-size: 1rem;
+    }
+}
 
 /* ── Hero Section ── */
 .hero-section {
@@ -102,4 +113,94 @@
     background: var(--slate-light);
     border-bottom: 1px solid var(--border);
     padding: 1rem 0;
+}
+.page-header .breadcrumb {
+    flex-wrap: wrap;
+    word-break: break-word;
+}
+
+/* ── Horizontal category nav (mobile) ── */
+.category-nav-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    margin: 0 -0.75rem;
+    padding: 0 0.75rem 0.25rem;
+}
+.category-nav-scroll .category-nav-inner {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0;
+    min-width: min-content;
+}
+.category-nav-scroll .dropdown,
+.category-nav-scroll > .category-nav-inner > a {
+    flex-shrink: 0;
+}
+
+/* Home: wrap badges on tablet+, horizontal scroll only on narrow phones */
+.category-nav-scroll.home-categories .category-nav-inner {
+    flex-wrap: wrap;
+}
+@media (max-width: 575.98px) {
+    .category-nav-scroll.home-categories .category-nav-inner {
+        flex-wrap: nowrap;
+    }
+}
+
+/* ── Hero (mobile) ── */
+@media (max-width: 575.98px) {
+    .hero-section {
+        padding: 2rem 0;
+    }
+    .hero-section .hero-title,
+    .hero-section .display-5 {
+        font-size: 1.55rem;
+        line-height: 1.25;
+    }
+    .hero-section .lead {
+        font-size: 1rem;
+    }
+}
+
+/* ── Cart row: stack qty / line total on narrow screens ── */
+.cart-row-store .cart-row-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+@media (max-width: 767.98px) {
+    .cart-row-store .cart-row-actions {
+        justify-content: space-between;
+        width: 100%;
+        padding-top: 0.5rem;
+        margin-top: 0.25rem;
+        border-top: 1px solid var(--border);
+    }
+}
+
+/* ── Sticky order summary: desktop only (avoids odd overlap on mobile) ── */
+@media (min-width: 992px) {
+    .order-summary-sticky {
+        position: sticky;
+        top: 5.5rem;
+    }
+}
+
+/* ── Touch: avoid heavy hover shift on phones ── */
+@media (hover: none) {
+    .product-card:hover {
+        transform: none;
+    }
+    .product-card:hover .product-img-wrap img {
+        transform: none;
+    }
+}
+
+/* ── Tables: optional min width for admin storefront tables ── */
+.table-min-600 {
+    min-width: 600px;
 }
